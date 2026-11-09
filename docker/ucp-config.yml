@@ -1,0 +1,15 @@
+meta:
+  version: 1.0.0
+active: true
+config-full:
+  load-order:
+    - extension: crusader-bridge
+      version: 0.1.0
+  modules:
+    crusader-bridge:
+      config: {}
+  plugins: {}
+config-sparse:
+  load-order: []
+  modules: {}
+  plugins: {}

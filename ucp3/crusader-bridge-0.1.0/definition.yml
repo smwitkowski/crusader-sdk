@@ -1,0 +1,6 @@
+name: crusader-bridge
+display-name: "Crusader SDK bridge"
+author: crusader-sdk
+version: 0.1.0
+meta:
+  version: 1.0.0

@@ -1,0 +1,26 @@
+# Crusader SDK
+
+> Python SDK and bridge for Stronghold Crusader.
+
+## Documentation
+
+- [api](docs/api.md): Documentation page.
+- [commands/allies](docs/commands/allies.md): Documentation page.
+- [commands/defences](docs/commands/defences.md): Documentation page.
+- [commands/economy](docs/commands/economy.md): Documentation page.
+- [commands/military](docs/commands/military.md): Documentation page.
+- [commands/observe](docs/commands/observe.md): Documentation page.
+- [commands/siege](docs/commands/siege.md): Documentation page.
+- [commands/time](docs/commands/time.md): Documentation page.
+- [concepts](docs/concepts.md): Documentation page.
+- [how-it-works](docs/how-it-works.md): Documentation page.
+- [index](docs/index.md): Documentation page.
+- [protocol](docs/protocol.md): Documentation page.
+- [quickstart](docs/quickstart.md): Documentation page.
+- [reference/buildings](docs/reference/buildings.md): Documentation page.
+- [reference/errors](docs/reference/errors.md): Documentation page.
+- [reference/events](docs/reference/events.md): Documentation page.
+- [reference/goods](docs/reference/goods.md): Documentation page.
+- [reference/map-legend](docs/reference/map-legend.md): Documentation page.
+- [reference/state](docs/reference/state.md): Documentation page.
+- [reference/units](docs/reference/units.md): Documentation page.
