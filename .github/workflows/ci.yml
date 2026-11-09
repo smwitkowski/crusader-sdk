@@ -42,7 +42,7 @@ jobs:
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: coverage.xml
-          fail_ci_if_error: true
+          fail_ci_if_error: false  # tokenless upload needs the repo enabled on codecov.io
           use_oidc: false
 
   docs-security:
@@ -56,7 +56,7 @@ jobs:
       - run: sh scripts/leakcheck.sh
       - name: Scan git history for secrets
         run: |
-          go install github.com/gitleaks/gitleaks/v8@v8.28.0
+          go install github.com/zricethezav/gitleaks/v8@v8.28.0
           "$(go env GOPATH)/bin/gitleaks" git --redact --no-banner
       - name: Audit locked dependencies
         run: |
