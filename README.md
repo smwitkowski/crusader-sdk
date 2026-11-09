@@ -1,6 +1,8 @@
 # Crusader SDK
 
-![Illustration of a desert castle surrounding an oasis](assets/hero.jpg)
+![Stronghold Crusader gameplay: a catapult firing across an oasis during a siege, driven through the SDK](assets/hero.jpg)
+
+<sub>Gameplay screenshot from Stronghold Crusader, © Firefly Studios, captured from a game driven through this SDK.</sub>
 
 [![CI](https://github.com/smwitkowski/crusader-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/smwitkowski/crusader-sdk/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/smwitkowski/crusader-sdk)](LICENSE)
