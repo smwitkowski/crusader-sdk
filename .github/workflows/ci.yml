@@ -44,6 +44,7 @@ jobs:
           files: coverage.xml
           fail_ci_if_error: false  # tokenless upload needs the repo enabled on codecov.io
           use_oidc: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   docs-security:
     runs-on: ubuntu-latest
