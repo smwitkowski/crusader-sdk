@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - run: uv sync --locked --extra dev --extra bridge
+      - run: uv run --locked ruff check .
+      - run: uv run --locked ruff format --check .
+      - run: uv run --locked pyright
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked --extra dev --extra bridge
+      - if: matrix.python != '3.13'
+        run: uv run --locked pytest
+      - if: matrix.python == '3.13'
+        run: uv run --locked pytest --cov=crusader --cov-report=xml
+      - if: matrix.python == '3.13'
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          files: coverage.xml
+          fail_ci_if_error: true
+          use_oidc: false
+
+  docs-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - run: uv run --locked python tools/gen_docs.py --check
+      - run: sh scripts/leakcheck.sh
+      - name: Scan git history for secrets
+        run: |
+          go install github.com/gitleaks/gitleaks/v8@v8.28.0
+          "$(go env GOPATH)/bin/gitleaks" git --redact --no-banner
+      - name: Audit locked dependencies
+        run: |
+          uv export --locked --all-extras --no-emit-project --no-hashes -o /tmp/crusader-requirements.txt
+          uvx pip-audit -r /tmp/crusader-requirements.txt
