@@ -1,5 +1,3 @@
-# pyright: basic
-
 """Real Stronghold Crusader 1.41 backend: reads and drives a running game through /proc/<pid>/mem.
 
 Exe: Crusader 1.41 HD, sha256 3bb0a8c1...ac5a, the same build OpenSHC targets (SHC_3BB0A8C1), so its
