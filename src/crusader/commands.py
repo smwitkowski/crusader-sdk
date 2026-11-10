@@ -63,11 +63,17 @@ COMMANDS: dict[str, Command] = {
                     "dungeon, stretching_rack, gibbet, chopping_block, dunking_stool, gatehouse_turned, "
                     "large_gatehouse_turned, drawbridge, killing_pit, pitch_ditch, dog_cage, oil_smelter, "
                     "water_pot, keep, catapult, trebuchet, battering_ram, siege_tower, portable_shield, "
-                    "fire_ballista; availability depends on driver level and mission"
+                    "fire_ballista; the map's build menu can withhold some"
                 ),
             },
             {"name": "limit", "type": "int", "default": 5, "constraints": "1..50"},
-            {"name": "near", "type": "tuple[int, int] | None", "default": None, "wire_names": ["near_x", "near_y"]},
+            {
+                "name": "near",
+                "type": "tuple[int, int] | None",
+                "default": None,
+                "wire_names": ["near_x", "near_y"],
+                "constraints": "tile (x, y) to search around; the search centres on (235, 230) when omitted",
+            },
         ],
         "return_type": "list[Site]",
         "summary": "Find valid building sites, optionally near a tile.",
@@ -75,14 +81,23 @@ COMMANDS: dict[str, Command] = {
     "look": {
         "command": "look",
         "group": "observe",
-        "params": [{"name": "x", "type": "int"}, {"name": "y", "type": "int"}],
+        "params": [
+            {"name": "x", "type": "int", "constraints": "0..399; the command is always refused"},
+            {"name": "y", "type": "int", "constraints": "0..399; the command is always refused"},
+        ],
         "return_type": "CommandResult",
-        "summary": "Centre the camera on a tile and return its visible area.",
+        "summary": "Centre the camera on a tile; always refused by the game driver.",
     },
     "select": {
         "command": "select",
         "group": "observe",
-        "params": [{"name": "unit_ids", "type": "Iterable[int]"}],
+        "params": [
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int]",
+                "constraints": "list of 1..500 distinct IDs of own live units",
+            }
+        ],
         "return_type": "CommandResult",
         "summary": "Select owned soldiers by ID.",
     },
@@ -91,7 +106,7 @@ COMMANDS: dict[str, Command] = {
         "group": "observe",
         "params": [{"name": "since", "type": "int", "default": 0, "constraints": "0..current event count"}],
         "return_type": "list[Event]",
-        "summary": "Return events with sequence numbers at or after since.",
+        "summary": "Return events from list offset since onward.",
     },
     "build": {
         "command": "build",
@@ -111,7 +126,7 @@ COMMANDS: dict[str, Command] = {
                     "stretching_rack, gibbet, chopping_block, dunking_stool, gatehouse_turned, "
                     "large_gatehouse_turned, drawbridge, killing_pit, pitch_ditch, dog_cage, oil_smelter, "
                     "water_pot, flag_1, flag_2, flag_3, flag_4, heads, brazier, mangonel, ballista; "
-                    "availability depends on driver level and mission"
+                    "the map's build menu can withhold some"
                 ),
             },
             {
@@ -131,7 +146,9 @@ COMMANDS: dict[str, Command] = {
     "demolish": {
         "command": "demolish",
         "group": "economy",
-        "params": [{"name": "building_id", "type": "int"}],
+        "params": [
+            {"name": "building_id", "type": "int", "constraints": "ID of an owned building from state buildings"}
+        ],
         "return_type": "CommandResult",
         "summary": "Demolish an owned building.",
     },
@@ -177,7 +194,7 @@ COMMANDS: dict[str, Command] = {
                 "constraints": (
                     "Unit name (not ID); archer, crossbowman, spearman, pikeman, maceman, swordsman, knight, "
                     "arabian_archer, slave, slinger, assassin, horse_archer, arabian_swordsman, fire_thrower, "
-                    "engineer, laddermen, tunneler, monk; availability depends on driver level and mission"
+                    "engineer, laddermen, tunneler, monk; a map can withhold some"
                 ),
             },
             {"name": "count", "type": "int", "default": 1, "constraints": "1..50"},
@@ -189,7 +206,11 @@ COMMANDS: dict[str, Command] = {
         "command": "move",
         "group": "military",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -214,7 +235,11 @@ COMMANDS: dict[str, Command] = {
         "command": "set_stance",
         "group": "military",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {"name": "stance", "type": "str", "constraints": "stand_ground, defensive, aggressive"},
         ],
         "return_type": "CommandResult",
@@ -223,14 +248,26 @@ COMMANDS: dict[str, Command] = {
     "stop": {
         "command": "stop",
         "group": "military",
-        "params": [{"name": "unit_ids", "type": "Iterable[int] | None"}],
+        "params": [
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            }
+        ],
         "return_type": "CommandResult",
         "summary": "Stop the selected units.",
     },
     "disband": {
         "command": "disband",
         "group": "military",
-        "params": [{"name": "unit_ids", "type": "Iterable[int] | None"}],
+        "params": [
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            }
+        ],
         "return_type": "CommandResult",
         "summary": "Return soldiers to the campfire as peasants.",
     },
@@ -238,7 +275,11 @@ COMMANDS: dict[str, Command] = {
         "command": "patrol",
         "group": "military",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "points",
                 "type": "Iterable[tuple[int, int]]",
@@ -252,7 +293,11 @@ COMMANDS: dict[str, Command] = {
         "command": "attack_ground",
         "group": "military",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -271,7 +316,11 @@ COMMANDS: dict[str, Command] = {
         "command": "attack_wall",
         "group": "military",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -289,14 +338,28 @@ COMMANDS: dict[str, Command] = {
     "attack": {
         "command": "attack",
         "group": "military",
-        "params": [{"name": "unit_ids", "type": "Iterable[int] | None"}, {"name": "target_id", "type": "int"}],
+        "params": [
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
+            {"name": "target_id", "type": "int", "constraints": "ID of a live enemy unit from state units"},
+        ],
         "return_type": "CommandResult",
         "summary": "Order units to attack an enemy unit.",
     },
     "attack_building": {
         "command": "attack_building",
         "group": "military",
-        "params": [{"name": "unit_ids", "type": "Iterable[int] | None"}, {"name": "building_id", "type": "int"}],
+        "params": [
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
+            {"name": "building_id", "type": "int", "constraints": "ID of an enemy building from state enemy buildings"},
+        ],
         "return_type": "CommandResult",
         "summary": "Order units to attack an enemy building.",
     },
@@ -304,7 +367,11 @@ COMMANDS: dict[str, Command] = {
         "command": "build_siege",
         "group": "siege",
         "params": [
-            {"name": "engineer_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "engineer_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live engineers; None is refused by the game driver",
+            },
             {
                 "name": "engine",
                 "type": "str",
@@ -327,21 +394,28 @@ COMMANDS: dict[str, Command] = {
     "man": {
         "command": "man",
         "group": "siege",
-        "params": [{"name": "engineer_ids", "type": "Iterable[int] | None"}, {"name": "engine_id", "type": "int"}],
+        "params": [
+            {
+                "name": "engineer_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live engineers; None is refused by the game driver",
+            },
+            {"name": "engine_id", "type": "int", "constraints": "ID of an own siege engine from state units"},
+        ],
         "return_type": "CommandResult",
         "summary": "Assign engineers to crew an engine.",
     },
     "unman": {
         "command": "unman",
         "group": "siege",
-        "params": [{"name": "engine_id", "type": "int"}],
+        "params": [{"name": "engine_id", "type": "int", "constraints": "ID of an own siege engine from state units"}],
         "return_type": "CommandResult",
         "summary": "Remove an engine's crew.",
     },
     "buy_ammo": {
         "command": "buy_ammo",
         "group": "siege",
-        "params": [{"name": "engine_id", "type": "int"}],
+        "params": [{"name": "engine_id", "type": "int", "constraints": "ID of an own siege engine from state units"}],
         "return_type": "CommandResult",
         "summary": "Buy ammunition for a catapult or trebuchet.",
     },
@@ -349,7 +423,7 @@ COMMANDS: dict[str, Command] = {
         "command": "throw_cow",
         "group": "siege",
         "params": [
-            {"name": "engine_id", "type": "int"},
+            {"name": "engine_id", "type": "int", "constraints": "ID of an own siege engine from state units"},
             {
                 "name": "x",
                 "type": "int",
@@ -368,7 +442,11 @@ COMMANDS: dict[str, Command] = {
         "command": "set_ladder",
         "group": "siege",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -387,7 +465,11 @@ COMMANDS: dict[str, Command] = {
         "command": "dig_tunnel",
         "group": "siege",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -405,14 +487,19 @@ COMMANDS: dict[str, Command] = {
     "repair": {
         "command": "repair",
         "group": "economy",
-        "params": [{"name": "building_id", "type": "int"}],
+        "params": [
+            {"name": "building_id", "type": "int", "constraints": "ID of an owned building from state buildings"}
+        ],
         "return_type": "CommandResult",
         "summary": "Repair an owned tower or gatehouse.",
     },
     "set_building_active": {
         "command": "set_building_active",
         "group": "economy",
-        "params": [{"name": "building_id", "type": "int"}, {"name": "active", "type": "bool"}],
+        "params": [
+            {"name": "building_id", "type": "int", "constraints": "ID of an owned building from state buildings"},
+            {"name": "active", "type": "bool", "constraints": "True wakes; False puts to sleep"},
+        ],
         "return_type": "CommandResult",
         "summary": "Set whether buildings of this type are active.",
     },
@@ -420,7 +507,7 @@ COMMANDS: dict[str, Command] = {
         "command": "set_workshop_product",
         "group": "economy",
         "params": [
-            {"name": "building_id", "type": "int"},
+            {"name": "building_id", "type": "int", "constraints": "ID of an owned building from state buildings"},
             {
                 "name": "weapon",
                 "type": "str",
@@ -435,7 +522,7 @@ COMMANDS: dict[str, Command] = {
         "group": "economy",
         "params": [
             {"name": "food", "type": "str", "constraints": "apples, cheese, meat, bread"},
-            {"name": "allowed", "type": "bool"},
+            {"name": "allowed", "type": "bool", "constraints": "True allows eating; False forbids it"},
         ],
         "return_type": "CommandResult",
         "summary": "Allow or disallow consumption of a food.",
@@ -443,7 +530,10 @@ COMMANDS: dict[str, Command] = {
     "set_gate": {
         "command": "set_gate",
         "group": "defences",
-        "params": [{"name": "building_id", "type": "int"}, {"name": "open", "type": "bool"}],
+        "params": [
+            {"name": "building_id", "type": "int", "constraints": "ID of an owned building from state buildings"},
+            {"name": "open", "type": "bool", "constraints": "True opens; False closes"},
+        ],
         "return_type": "CommandResult",
         "summary": "Open or close a gatehouse or drawbridge.",
     },
@@ -471,7 +561,7 @@ COMMANDS: dict[str, Command] = {
                 "type": "int",
                 "constraints": "0..399; valid map tile; line must be straight and at most 100 tiles",
             },
-            {"name": "dig", "type": "bool", "default": True},
+            {"name": "dig", "type": "bool", "default": True, "constraints": "True marks the plan; False removes it"},
         ],
         "return_type": "CommandResult",
         "summary": "Mark or remove a moat plan along a line.",
@@ -480,7 +570,11 @@ COMMANDS: dict[str, Command] = {
         "command": "dig_moat",
         "group": "defences",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -499,7 +593,11 @@ COMMANDS: dict[str, Command] = {
         "command": "fill_moat",
         "group": "defences",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -536,7 +634,11 @@ COMMANDS: dict[str, Command] = {
         "command": "light_pitch",
         "group": "defences",
         "params": [
-            {"name": "unit_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "unit_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live units; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -554,7 +656,14 @@ COMMANDS: dict[str, Command] = {
     "oil_duty": {
         "command": "oil_duty",
         "group": "defences",
-        "params": [{"name": "engineer_ids", "type": "Iterable[int] | None"}, {"name": "smelter_id", "type": "int"}],
+        "params": [
+            {
+                "name": "engineer_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live engineers; None is refused by the game driver",
+            },
+            {"name": "smelter_id", "type": "int", "constraints": "ID of an owned oil_smelter"},
+        ],
         "return_type": "CommandResult",
         "summary": "Assign engineers to an oil smelter.",
     },
@@ -562,7 +671,11 @@ COMMANDS: dict[str, Command] = {
         "command": "pour_oil",
         "group": "defences",
         "params": [
-            {"name": "engineer_ids", "type": "Iterable[int] | None"},
+            {
+                "name": "engineer_ids",
+                "type": "Iterable[int] | None",
+                "constraints": "list of 1..500 distinct IDs of own live engineers; None is refused by the game driver",
+            },
             {
                 "name": "x",
                 "type": "int",
@@ -593,7 +706,9 @@ COMMANDS: dict[str, Command] = {
     "building_info": {
         "command": "building_info",
         "group": "observe",
-        "params": [{"name": "building_id", "type": "int"}],
+        "params": [
+            {"name": "building_id", "type": "int", "constraints": "ID of an owned building from state buildings"}
+        ],
         "return_type": "BuildingInfo",
         "summary": "Return the panel information for an owned building.",
     },
@@ -601,7 +716,7 @@ COMMANDS: dict[str, Command] = {
         "command": "ally_order",
         "group": "allies",
         "params": [
-            {"name": "ally", "type": "int"},
+            {"name": "ally", "type": "int", "constraints": "player number of an ally whose lord is alive"},
             {"name": "order", "type": "str", "constraints": "attack, defend, cancel"},
             {
                 "name": "target",
@@ -617,7 +732,7 @@ COMMANDS: dict[str, Command] = {
         "command": "ally_send_goods",
         "group": "allies",
         "params": [
-            {"name": "ally", "type": "int"},
+            {"name": "ally", "type": "int", "constraints": "player number of an ally whose lord is alive"},
             {
                 "name": "good",
                 "type": "str",
@@ -635,7 +750,7 @@ COMMANDS: dict[str, Command] = {
         "command": "ally_request_goods",
         "group": "allies",
         "params": [
-            {"name": "ally", "type": "int"},
+            {"name": "ally", "type": "int", "constraints": "player number of an ally whose lord is alive"},
             {
                 "name": "good",
                 "type": "str",
@@ -652,7 +767,10 @@ COMMANDS: dict[str, Command] = {
     "ally_answer": {
         "command": "ally_answer",
         "group": "allies",
-        "params": [{"name": "ally", "type": "int"}, {"name": "accept", "type": "bool"}],
+        "params": [
+            {"name": "ally", "type": "int", "constraints": "player number of an ally whose lord is alive"},
+            {"name": "accept", "type": "bool", "constraints": "True sends the requested goods; False refuses"},
+        ],
         "return_type": "CommandResult",
         "summary": "Accept or refuse an ally's request.",
     },
@@ -684,7 +802,7 @@ COMMANDS: dict[str, Command] = {
                 "name": "kind",
                 "type": "str",
                 "default": "wall",
-                "constraints": "wall, stairs, low_wall, crenel; availability depends on driver level",
+                "constraints": "wall, stairs, low_wall, crenel; stairs lines are at most 12 tiles",
             },
         ],
         "return_type": "CommandResult",
@@ -695,6 +813,6 @@ COMMANDS: dict[str, Command] = {
         "group": "time",
         "params": [{"name": "ticks", "type": "int", "constraints": "1..3000"}],
         "return_type": "AdvanceResult",
-        "summary": "Advance the game by 1 to 3000 ticks.",
+        "summary": "Run the game for 1 to 3000 ticks.",
     },
 }

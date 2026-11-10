@@ -6,6 +6,12 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- Reference docs are complete: every building (footprint, cost, placement, purpose, staffing), unit, siege engine,
+  good, event field and state field is documented, each command page lists its needs, costs, timing and refusals,
+  and `docs/concepts.md` gains a game mechanics primer. Parameter constraints in the command catalog are filled in.
+- Docs and README no longer say `advance` returns events; read them with `events`.
+
 ## [0.1.0] - 2026-11-10
 
 ### Fixed

@@ -1,121 +1,162 @@
 # Observe commands
 
-These commands inspect visible state, map tiles, events, reports, and owned objects. Some also change the camera or selection. IDs and coordinates below are illustrative.
+These commands read the game: state, map, building sites, events and the game's information panels. They are not limited by a tick budget. After the game has ended the match, only `state` still answers; the others are refused with `game over: ...`. IDs and coordinates in examples are illustrative.
 
 ## `state`
 
 Return the current visible game state. [API reference](../api.md#state).
 
-Returns `State`; use its owned units and buildings to choose IDs for orders. Enemy information is limited to visible state. Unit IDs can be reused after death, so read them fresh before ordering.
+- **Returns:** one `State` snapshot: clock, treasury and stock, popularity, population and housing, tax and rations, the player's buildings, every recognized unit on the map, and in a skirmish the enemy lords and buildings. Every field is described in the [state reference](../reference/state.md).
+- **Use:** take unit and building IDs from it immediately before ordering; unit IDs are reused after a unit dies.
+- **Refusals:** none from the driver; it also answers after the match has ended.
 
 ```python
-game.state()
+s = game.state()
+archers = [u["id"] for u in s["units"] if u["owner"] == 1 and u["type"] == "archer"]
+print(s["tick"], s["gold"], s["stock"]["wood"], s["popularity"], s["idle_peasants"])
 ```
 
-The returned `State` includes `tick`, `stock`, `units`, and `buildings`; values depend on the running game.
-
-See also: [related reference](../reference/state.md); [refusals](../reference/errors.md#state).
+See also: [state reference](../reference/state.md); [refusals](../reference/errors.md#state).
 
 
 ## `map`
 
-Return the inclusive tile rectangle as text. The default rectangle runs from (0, 0) through (399, 399), inclusive. [API reference](../api.md#map).
+Return the inclusive tile rectangle as text. [API reference](../api.md#map).
 
-Returns a string. Invalid rectangles are refused; coordinates include both endpoints.
+- **Arguments:** `x0, y0, x1, y1`, each 0 to 399 with `x0 <= x1` and `y0 <= y1`. The default is the whole 400 × 400 map.
+- **Returns:** newline-separated rows, one character per tile. Row 0 of the result is `y0` and column 0 is `x0`, so `rows[y - y0][x - x0]` is tile `(x, y)`. The characters are explained in the [map legend](../reference/map-legend.md): `.` open ground, `,` farmable grass, `~` water, `^` blocked or wall, letters for buildings.
+- **Limits:** the map shows terrain and buildings, not units, and not builds queued in the current pause.
+- **Refused when:** a coordinate is not an integer in range or the rectangle is inverted (`invalid map rectangle`).
 
 ```python
-game.map(220, 220, 240, 240)
+rows = game.map(220, 220, 240, 240).splitlines()
+tile = rows[230 - 220][235 - 220]  # tile (235, 230)
 ```
 
-The return is a newline-separated string; the result contents depend on the terrain.
-
-See also: [related reference](../reference/map-legend.md); [refusals](../reference/errors.md#map).
+See also: [map legend](../reference/map-legend.md); [refusals](../reference/errors.md#map).
 
 
 ## `find_sites`
 
-Find valid building sites, optionally near a tile. The optional near tile narrows the search around a location; the default limit is 5. [API reference](../api.md#find_sites).
+Find positions where the game would accept a building now, nearest first. [API reference](../api.md#find_sites).
 
-Returns `list[Site]`. `limit` must be 1–50; unknown or unavailable buildings are refused. Without `near`, the driver searches around the mission keep, otherwise (235, 230). Queued builds are treated as occupied, even before the map shows them. A site does not guarantee that you can afford a build.
+- **Arguments:** `building` is a placement name from the [buildings reference](../reference/buildings.md), `keep`, or a siege engine name (for its 3 × 3 tent). `limit` is 1 to 50 (default 5). `near` is the tile to search around; without it the search centres on tile (235, 230), so pass a tile near the player's keep or the resource wanted.
+- **Returns:** up to `limit` sites as `{"x", "y"}` top-left tiles, nearest to `near` first, none overlapping another or a build queued in this pause. Every site has passed the map checks and the game's own placement check.
+- **Limits:** the driver tests at most `10 * limit` candidates against the game, so the list can be shorter than `limit`, or empty, even when valid spots exist farther away; raise `limit` or move `near`. Cost is not checked, and a site can stop being free once time moves.
+- **Refused when:** the name is not a recognized placement name, `limit` is out of range, or the map's build menu does not offer the building.
 
 ```python
-game.find_sites("woodcutter", limit=3, near=(235, 230))
+sites = game.find_sites("wheat_farm", limit=3, near=(235, 230))
+# [{"x": 228, "y": 236}, {"x": 240, "y": 221}]
+if sites:
+    game.build("wheat_farm", sites[0]["x"], sites[0]["y"])
 ```
 
-Each returned site has `x` and `y`; the list may be empty.
-
-See also: [related reference](economy.md#build); [refusals](../reference/errors.md#find_sites).
+See also: [`build`](economy.md#build); [refusals](../reference/errors.md#find_sites).
 
 
 ## `look`
 
-Centre the camera on a tile and return its visible area. [API reference](../api.md#look).
+Centre the camera on a tile. Always refused by the game driver. [API reference](../api.md#look).
 
-The current real backend refuses camera control; do not rely on this command to reveal an area.
+- **Refusals:** every call fails with `camera control is not supported`. The whole map is readable through `state` and `map` without moving a camera, so nothing depends on this command.
 
 ```python
-game.look(235, 230)
+game.look(235, 230)  # raises CrusaderError
 ```
 
-See also: [related reference](../how-it-works.md); [refusals](../reference/errors.md#look).
+See also: [how it works](../how-it-works.md); [refusals](../reference/errors.md#look).
 
 
 ## `select`
 
-Select owned soldiers by ID. [API reference](../api.md#select).
+Select owned units by ID, as a drag-select in the game does. [API reference](../api.md#select).
 
-Pass 1–500 distinct IDs of your live soldiers. Invalid, enemy, or dead units are refused. Selection changes the game selection.
+- **Arguments:** a list of 1 to 500 distinct IDs of the player's own live units.
+- **Effect:** replaces the game's current selection and groups the units. Every order command selects its own units, so `select` is never required before an order.
+- **Returns:** `{"tribe": n}`, the group number the game assigned.
+- **Refused when:** the list is empty, too long or has duplicates, or an ID is not one of the player's live units.
 
 ```python
 game.select([12, 13])
+# {"tribe": 1249}
 ```
 
-On success the return has a `tribe` field; its value is assigned by the game.
-
-See also: [related reference](military.md#move); [refusals](../reference/errors.md#select).
+See also: [`move`](military.md#move); [refusals](../reference/errors.md#select).
 
 
 ## `events`
 
-Return events with sequence numbers at or after since. The since value is inclusive and defaults to 0. [API reference](../api.md#events).
+Return the session's events from a list offset onward. [API reference](../api.md#events).
 
-The driver treats `since` as an inclusive offset into its event list, from 0 through the current event count. An invalid offset is refused. Use `next_since` from `advance()` to fetch newer events; this is not a tick number. Event fields vary; do not assume optional fields are present.
+- **Arguments:** `since` is an offset into the event list, 0 (the default, everything) through the current number of events. It is not a tick.
+- **Returns:** a list of event objects, oldest first; `[]` when nothing is new. Each has `type` and `tick` plus the fields of its type; see the [events reference](../reference/events.md).
+- **Use:** keep a count of events read and pass it as `since` after each `advance`.
+- **Refused when:** `since` is negative, beyond the event count or not an integer (`invalid event offset`), and after the match has ended.
 
 ```python
-game.events(since=0)
+seen = 0
+game.advance(800)
+for event in game.events(since=seen):
+    print(event["type"], event["tick"])
+    seen += 1
 ```
 
-If there are no events at or after the offset, the return is `[]`.
-
-See also: [related reference](../reference/events.md); [refusals](../reference/errors.md#events).
+See also: [events reference](../reference/events.md); [refusals](../reference/errors.md#events).
 
 
 ## `report`
 
-Return a page of the scribe's book. Pages: popularity, fear, religion, army, food, population, stores, weapons, merit. [API reference](../api.md#report).
+Return one page of the game's information book. [API reference](../api.md#report).
 
-Returns a report page; availability and fields depend on the page and game state.
+`page` selects the figures returned:
+
+| Page | Fields |
+|---|---|
+| `popularity` | `food`, `tax`, `crowding`, `fear_factor`, `religion`, `ale_coverage`: each factor's monthly popularity change in the units the game displays; `coming_month`: their sum. Optional `event_0` to `event_5` and `event_flag` appear while a scripted map event affects popularity. |
+| `fear` | `good_things`, `bad_things` (counts built), `popularity_effect` (the fear level, −5 to 5), `next_level_in` (how many more are needed for the next level; absent at ±5), `efficiency_pct` (worker efficiency). |
+| `religion` | `priests`, `blessed_pct`, `popularity_effect`, `next_level_at` (blessed percentage of the next step; absent from 95 %). |
+| `army` | `troops`: `{unit name: count}` of the player's live troops and engines, without the lord; `fear_bonus`: combat modifier in percent, 5 per fear level. |
+| `food` | `meat`, `cheese`, `bread`, `apples`: granary stock. |
+| `population` | `history`: population at the end of each game month so far (at most 300 values). |
+| `stores` | `wood`, `hops`, `stone`, `iron`, `pitch`, `wheat`, `ale`, `flour`: stockpile stock. |
+| `weapons` | `bows`, `crossbows`, `spears`, `pikes`, `maces`, `swords`, `leather_armor`, `metal_armor`: armory stock. |
+| `merit` | `lords`: one `{player, gold, troops}` per lord still in the game, the game's Order of Merit. |
+
+- **Refused when:** `page` is not one of the nine names.
 
 ```python
-game.report("food")
+game.report("popularity")
+# {"food": 4, "tax": -2, "crowding": 0, "fear_factor": 0, "religion": 0, "ale_coverage": 0, "coming_month": 2}
 ```
 
-Returned fields vary by page: for example the army page returns `troops` and `fear_bonus`.
+The popularity factors are explained in the [mechanics primer](../concepts.md#popularity).
 
-See also: [related reference](../reference/state.md); [refusals](../reference/errors.md#report).
+See also: [state reference](../reference/state.md); [refusals](../reference/errors.md#report).
 
 
 ## `building_info`
 
-Return the panel information for an owned building. [API reference](../api.md#building_info).
+Return what the game's panel shows for one of the player's buildings. [API reference](../api.md#building_info).
 
-Pass an owned building ID from state; the panel data depends on building type. An invalid or non-owned ID is refused.
+- **Arguments:** `building_id` from `state()["buildings"]`. Other players' buildings have no panel.
+- **Returns:** always `id` and `type`, then by building type:
+
+| Building | Extra fields |
+|---|---|
+| `hovel` | `houses`: 8. |
+| `granary` | `food_units` (total food), `months_supply` (`None` when the game shows none), `food_types_eaten`, `rations`, `rations_popularity` and `variety_popularity` (the two food factors, in displayed popularity units). The figures describe the whole town, not one granary. |
+| `keep` | `peasants` (population) and `tax` (level −3 to 8). |
+| towers and gatehouses | `hp`, `max_hp`. |
+| `fletcher`, `poleturner`, `blacksmith` | `status`: the panel's status lines as text, when it shows any. |
+| any staffed building | `worker`: the panel's worker line in the game's own words (for example that there is no worker, that it sleeps, or what the worker is doing). Absent when the panel has none. |
+
+- **Refused when:** the ID is not an integer or not one of the player's buildings (`building N is not one of yours`).
 
 ```python
-game.building_info(12)
+game.building_info(31)
+# {"id": 31, "type": "granary", "food_units": 62, "months_supply": 5, "food_types_eaten": 2,
+#  "rations": "normal", "rations_popularity": 0, "variety_popularity": 1}
 ```
 
-Returned fields include `id` and `type`, with additional fields according to the panel.
-
-See also: [related reference](../reference/state.md); [refusals](../reference/errors.md#building_info).
-
+See also: [buildings reference](../reference/buildings.md); [refusals](../reference/errors.md#building_info).

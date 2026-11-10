@@ -167,10 +167,10 @@ def generate():
         ]
         for param in spec["params"]:
             default = repr(param["default"]) if "default" in param else "required"
-            constraints = param.get("constraints", "—").replace("|", "\\|")
+            constraints = param.get("constraints", "none").replace("|", "\\|")
             api.append(f"| {code(param['name'])} | {code(param['type'])} | {code(default)} | {constraints} |")
         if not spec["params"]:
-            api.append("| — | — | — | — |")
+            api.append("| none | | | This command takes no parameters. |")
         api += [
             "",
             f"**Returns:** {code(spec['return_type'])}",

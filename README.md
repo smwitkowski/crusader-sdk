@@ -30,9 +30,9 @@ site = game.find_sites("granary", limit=1)[0]  # the game's own placement check
 game.build("granary", site["x"], site["y"])
 game.set_tax(2)
 
-result = game.advance(800)  # one game month (800 ticks); the game is paused otherwise
-for event in result["events"]:
-    print(event["type"], event.get("message", ""))
+game.advance(800)  # one game month (800 ticks); the game is paused otherwise
+for event in game.events():
+    print(event["type"], event["tick"])
 
 try:
     game.set_tax(42)

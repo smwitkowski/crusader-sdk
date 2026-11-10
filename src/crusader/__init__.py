@@ -68,7 +68,7 @@ class Game:
         return self._call("find_sites", building=building, limit=limit, near_x=coords[0], near_y=coords[1])
 
     def look(self, x: int, y: int) -> CommandResult:
-        """Centre the camera on a tile and return its visible area."""
+        """Centre the camera on a tile; always refused by the game driver."""
         return self._call("look", x=x, y=y)
 
     def select(self, unit_ids: Iterable[int]) -> CommandResult:
@@ -76,7 +76,7 @@ class Game:
         return self._call("select", unit_ids=list(unit_ids))
 
     def events(self, since: int = 0) -> list[Event]:
-        """Return events with sequence numbers at or after since."""
+        """Return events from list offset since onward."""
         return self._call("events", since=since)
 
     def build(self, building: str, x: int, y: int) -> CommandResult:
@@ -272,5 +272,5 @@ class Game:
         return self._call("build_wall", x1=x1, y1=y1, x2=x2, y2=y2, kind=kind)
 
     def advance(self, ticks: int) -> AdvanceResult:
-        """Advance the game by 1 to 3000 ticks."""
+        """Run the game for 1 to 3000 ticks."""
         return self._call("advance", ticks=ticks)
