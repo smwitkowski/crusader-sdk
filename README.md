@@ -52,7 +52,7 @@ flowchart TB
 
 Commands go through the same command queue the game's UI uses, so the game applies its own costs and rules. The game
 stays paused between calls; time moves only when you call `advance`. Details: [how it works](docs/how-it-works.md).
-The bridge and Docker setup have been tested offline; a live run against the game is still pending.
+The Docker setup has been verified live: `tools/smoke.py` passes all 12 steps against a fresh skirmish.
 
 ## Get started
 

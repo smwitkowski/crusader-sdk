@@ -26,11 +26,11 @@ except CrusaderError as exc:
 
 ## Run the bridge
 
-For a bridge installation, install the optional dependencies with `python -m pip install --pre 'crusader-sdk[bridge]'` (or `'.[bridge]'` from a checkout), then run `crusader-bridge --help` for match and process options. The real backend requires the supported game, Wine/Linux process access, and the included UCP3 module. Integration needs a live game run. The `--backend module:callable` option is a development hook for selecting an explicit backend factory. Alternatively, the following experimental Docker setup packages the runtime.
+For a bridge installation, install the optional dependencies with `python -m pip install --pre 'crusader-sdk[bridge]'` (or `'.[bridge]'` from a checkout), then run `crusader-bridge --help` for match and process options. The real backend requires the supported game, Wine/Linux process access, and the included UCP3 module. The `--backend module:callable` option is a development hook for selecting an explicit backend factory. Alternatively, the following experimental Docker setup packages the runtime.
 
 ## Run with Docker
 
-This container setup is experimental and has not yet been verified with a live game. You need Docker and your own legally obtained, supported Stronghold Crusader game folder. The image targets `linux/amd64`; other hosts require Docker's amd64 emulation.
+This container setup is verified against the live game (`tools/smoke.py`, 12 of 12 steps on a fresh skirmish). You need Docker and your own legally obtained, supported Stronghold Crusader game folder. The image targets `linux/amd64`; other hosts require Docker's amd64 emulation.
 
 From the repository root, verify the executable and build the image:
 
@@ -47,14 +47,13 @@ Set `CRUSADER_TOKEN` in the host environment, replace the example path with the 
 docker run --rm --name crusader-sdk \
   --platform linux/amd64 \
   --cap-drop ALL \
-  --cap-add SYS_PTRACE \
   -e CRUSADER_TOKEN \
   --mount type=bind,src="/path/to/your/game",dst=/game,readonly \
   -p 127.0.0.1:8000:8000 \
   crusader-sdk:local --host 0.0.0.0
 ```
 
-The command adds only `SYS_PTRACE` for game-process access; whether it is required has not been verified. Do not use `--privileged` or host networking. The bridge binds to all container interfaces so Docker can publish it, but the published port is restricted to host loopback. The bridge is unauthenticated unless a token is configured; do not expose it to untrusted networks. Other containers on the same Docker network may still reach it.
+The container needs no added capabilities: the bridge reads the game process it starts as the same user, and the live check passes with `--cap-drop ALL` alone. Do not use `--privileged` or host networking. The bridge binds to all container interfaces so Docker can publish it, but the published port is restricted to host loopback. The bridge is unauthenticated unless a token is configured; do not expose it to untrusted networks. Other containers on the same Docker network may still reach it.
 
 Check the bridge from the host:
 

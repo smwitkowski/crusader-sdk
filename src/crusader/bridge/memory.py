@@ -152,8 +152,12 @@ class ProcessMemory:
         if len(candidates) != 1:
             raise ValueError("dynamic region must be in one mapping")
         region = candidates[0]
+        # Wine maps the UCP3 module's allocations (mailbox, tick target) as anonymous rwxp memory, so executable
+        # private memory is allowed only when it is anonymous (no backing file); the exe image and stacks never are.
+        anonymous = region.inode == 0 and not region.path
         if (
-            region.permissions != "rw-p"
+            region.permissions not in ("rw-p", "rwxp")
+            or (region.permissions == "rwxp" and not anonymous)
             or (region.inode, region.device) == self._identity
             or region.path.startswith("[stack")
         ):

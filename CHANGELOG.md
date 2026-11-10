@@ -6,6 +6,19 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- The memory boundary refused the UCP3 module's mailbox, which Wine maps as anonymous `rwxp` memory, so the bridge
+  could not start against the real game. Anonymous executable private memory is now accepted; file-backed
+  executable memory, the exe image and stacks are still refused.
+
+### Changed
+- `tools/smoke.py` advances the first month before building (a new skirmish pays out its starting gold and wood over
+  about 640 ticks), builds its own mercenary post, and asks `find_sites` for more candidates.
+- Docker docs: the container runs with `--cap-drop ALL` and no added capabilities (verified live).
+
+### Verified
+- First live run: all 12 `tools/smoke.py` steps pass against Stronghold Crusader HD 1.41 in the documented container.
+
 ## [0.1.0a1] - 2026-11-09
 
 First public pre-release.

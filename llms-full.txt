@@ -1983,7 +1983,7 @@ The Python client sends command requests to the bridge. The bridge validates the
 
 The process-memory layer verifies the executable SHA-256 and that the verified file is mapped by the process, then requires a layout sanity check. It checks mappings and permissions on access, bounds each operation to a single mapped region and at most 1 MiB, and limits writes to fixed ranges or validated dynamic module regions. Dynamic hook addresses come from the module log. These checks reduce accidental misuse; they are not a security sandbox for a compromised local process or trusted driver. Arbitrary memory access is not exposed as a bridge command. The module mailbox includes in-game write and function-call primitives used by the trusted driver; a compromised same-user process or a driver bug could abuse them.
 
-The backend depends on a specific executable and memory layout, process permissions, Wine and the module. Other versions can fail or behave incorrectly. The port and Docker integration have been tested offline only and still require a live game run. Game state and command support are not complete; in particular, `look` is refused by the current real backend.
+The backend depends on a specific executable and memory layout, process permissions, Wine and the module. Other versions can fail or behave incorrectly. The Docker integration is verified against the live game with `tools/smoke.py` (start from a fresh skirmish). Game state and command support are not complete; in particular, `look` is refused by the current real backend.
 
 The container starts UCP3 with `--ucp-no-security` so it can load the unsigned local module; this also enables the UCP3 console.
 
@@ -2054,11 +2054,11 @@ except CrusaderError as exc:
 
 ## Run the bridge
 
-For a bridge installation, install the optional dependencies with `python -m pip install --pre 'crusader-sdk[bridge]'` (or `'.[bridge]'` from a checkout), then run `crusader-bridge --help` for match and process options. The real backend requires the supported game, Wine/Linux process access, and the included UCP3 module. Integration needs a live game run. The `--backend module:callable` option is a development hook for selecting an explicit backend factory. Alternatively, the following experimental Docker setup packages the runtime.
+For a bridge installation, install the optional dependencies with `python -m pip install --pre 'crusader-sdk[bridge]'` (or `'.[bridge]'` from a checkout), then run `crusader-bridge --help` for match and process options. The real backend requires the supported game, Wine/Linux process access, and the included UCP3 module. The `--backend module:callable` option is a development hook for selecting an explicit backend factory. Alternatively, the following experimental Docker setup packages the runtime.
 
 ## Run with Docker
 
-This container setup is experimental and has not yet been verified with a live game. You need Docker and your own legally obtained, supported Stronghold Crusader game folder. The image targets `linux/amd64`; other hosts require Docker's amd64 emulation.
+This container setup is verified against the live game (`tools/smoke.py`, 12 of 12 steps on a fresh skirmish). You need Docker and your own legally obtained, supported Stronghold Crusader game folder. The image targets `linux/amd64`; other hosts require Docker's amd64 emulation.
 
 From the repository root, verify the executable and build the image:
 
@@ -2075,14 +2075,13 @@ Set `CRUSADER_TOKEN` in the host environment, replace the example path with the 
 docker run --rm --name crusader-sdk \
   --platform linux/amd64 \
   --cap-drop ALL \
-  --cap-add SYS_PTRACE \
   -e CRUSADER_TOKEN \
   --mount type=bind,src="/path/to/your/game",dst=/game,readonly \
   -p 127.0.0.1:8000:8000 \
   crusader-sdk:local --host 0.0.0.0
 ```
 
-The command adds only `SYS_PTRACE` for game-process access; whether it is required has not been verified. Do not use `--privileged` or host networking. The bridge binds to all container interfaces so Docker can publish it, but the published port is restricted to host loopback. The bridge is unauthenticated unless a token is configured; do not expose it to untrusted networks. Other containers on the same Docker network may still reach it.
+The container needs no added capabilities: the bridge reads the game process it starts as the same user, and the live check passes with `--cap-drop ALL` alone. Do not use `--privileged` or host networking. The bridge binds to all container interfaces so Docker can publish it, but the published port is restricted to host loopback. The bridge is unauthenticated unless a token is configured; do not expose it to untrusted networks. Other containers on the same Docker network may still reach it.
 
 Check the bridge from the host:
 

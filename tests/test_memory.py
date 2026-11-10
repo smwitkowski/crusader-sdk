@@ -153,7 +153,8 @@ def test_dynamic_region_registration_and_writes(monkeypatch):
     "mapping,address,size",
     [
         ("3000-4000 rw-s 0 00:00 0", 0x3100, 4),
-        ("3000-4000 rwxp 0 00:00 0", 0x3100, 4),
+        ("3000-4000 rwxp 0 00:01 12 /some/library.so", 0x3100, 4),
+        ("3000-4000 rwxp 0 00:01 10 /game", 0x3100, 4),
         ("3000-4000 rw-p 0 00:00 0 [stack]", 0x3100, 4),
         ("3000-4000 rw-p 0 00:01 10 /game", 0x3100, 4),
         ("3000-4000 rw-p 0 00:00 0\n4000-5000 rw-p 0 00:00 0", 0x3FFF, 2),
@@ -170,3 +171,16 @@ def test_dynamic_region_rejects_unsafe_mappings(monkeypatch, mapping, address, s
     with pytest.raises(ValueError):
         process.register_region(address, size)
     assert process._dynamic_regions == []
+
+
+def test_anonymous_executable_region_is_accepted(monkeypatch):
+    """Wine maps the UCP3 module's mailbox as anonymous rwxp memory (seen live: 04b60000-04ca0000 rwxp 0 00:00 0)."""
+    from crusader.bridge import memory as memmod
+
+    process = object.__new__(memmod.ProcessMemory)
+    process.pid, process._fd, process._verified = 1, 123, True
+    process._identity, process._write_ranges = (10, "00:01"), memmod.GAME_WRITE_RANGES
+    process._dynamic_regions = []
+    monkeypatch.setattr(memmod.Path, "read_text", lambda _: "1000-2000 r-xp 0 00:01 10 /game\n3000-4000 rwxp 0 00:00 0")
+    process.register_region(0x3100, 28)
+    assert process._dynamic_regions[0][:2] == (0x3100, 0x311C)

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Exercise a running bridge against a prepared, disposable game.
 
-The game needs room and resources for a hovel, a mercenary post, gold, and an
-idle peasant. Commands change the game; start from a disposable match.
+Start from a fresh skirmish (for example --match "skirmish:Inches Apart:rat:1"): the script advances the first
+month, then builds a hovel and a mercenary post, recruits a slave and moves it. Commands change the game;
+start from a disposable match.
 """
 
 import argparse
@@ -38,17 +39,11 @@ def main() -> int:
         raise AssertionError("command was accepted")
 
     state = step("connect/state", game.state)
-    sites = step("find_sites", lambda: game.find_sites("hovel"))
-
-    def build():
-        if not sites:
-            raise ValueError("no hovel sites found")
-        return game.build("hovel", sites[0]["x"], sites[0]["y"])
-
-    step("build", build)
     step("set_tax", lambda: game.set_tax(0))
 
     def advance_month():
+        # A new skirmish pays out its starting gold and wood over roughly its first 640 ticks, so the
+        # builds below come after the first month.
         if state is None:
             raise ValueError("initial state unavailable")
         result = game.advance(800)
@@ -58,6 +53,24 @@ def main() -> int:
 
     step("advance", advance_month)
     step("events", game.events)
+    # find_sites tries about 10 candidates per requested site, nearest first, so ask for several.
+    sites = step("find_sites", lambda: game.find_sites("hovel", limit=5))
+
+    def build():
+        if not sites:
+            raise ValueError("no hovel sites found")
+        return game.build("hovel", sites[0]["x"], sites[0]["y"])
+
+    step("build", build)
+
+    def build_post():
+        posts = game.find_sites("mercenary_post", limit=20)
+        if not posts:
+            raise ValueError("no mercenary post site found")
+        return game.build("mercenary_post", posts[0]["x"], posts[0]["y"])
+
+    step("build mercenary post", build_post)
+    step("let the post finish", lambda: game.advance(200))
     recruited = step("recruit", lambda: game.recruit("slave", 1))
 
     def move():
