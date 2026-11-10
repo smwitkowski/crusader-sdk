@@ -1,0 +1,16 @@
+name: Feature request
+description: A game action, observation or tool you'd like the SDK to support.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What you want to do
+      description: The in-game action or information, and how a human player does or sees it in the game.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What it would let you or your agent do.

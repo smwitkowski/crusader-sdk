@@ -1,5 +1,7 @@
+from importlib.metadata import version
+
 import crusader
 
 
-def test_version():
-    assert crusader.__version__ == "0.1.0"
+def test_version_matches_package_metadata():
+    assert crusader.__version__ == version("crusader-sdk")

@@ -18,37 +18,46 @@ Unofficial; not affiliated with or endorsed by Firefly Studios. You must provide
 
 ## Client example
 
-With a bridge already running locally:
+With a bridge running (see [Get started](#get-started)), play a month of the game from Python:
 
 ```python
 from crusader import CrusaderError, Game
 
+game = Game.connect()  # CRUSADER_URL and CRUSADER_TOKEN are read from the environment
+print(game.state()["gold"], "gold at tick", game.state()["tick"])
+
+site = game.find_sites("granary", limit=1)[0]  # the game's own placement check
+game.build("granary", site["x"], site["y"])
+game.set_tax(2)
+
+result = game.advance(800)  # one game month (800 ticks); the game is paused otherwise
+for event in result["events"]:
+    print(event["type"], event.get("message", ""))
+
 try:
-    game = Game.connect()
-    state = game.state()
-    print(f"Tick: {state['tick']}")
-    print(game.map(0, 0, 20, 20))
-    print(game.advance(100))  # advances the game by 100 ticks
-except CrusaderError as exc:
-    print(f"Request failed: {exc}")
+    game.set_tax(42)
+except CrusaderError as exc:  # refusals come back as errors, like the game's UI
+    print("refused:", exc)
 ```
 
 ## How it works
 
 ```mermaid
-flowchart LR
-    Client[Python client] -->|HTTP commands| Bridge[Bridge]
-    Bridge -->|process memory| Game[Stronghold Crusader under Wine / Xvfb]
-    Bridge -->|tick control and mailbox| Module[UCP3 module]
-    Module -->|game command queue| Game
+flowchart TB
+    A["Your code or agent"] -->|"Python SDK, REST or MCP"| B["Bridge server"]
+    B -->|"reads game memory"| G["Stronghold Crusader 1.41<br/>under Wine"]
+    B -->|"queues commands, controls ticks"| U["UCP3 module inside the game"]
+    U -->|"the game's own command queue"| G
 ```
 
-The real backend runs or attaches to the supported game under Linux/Wine. The port and Docker integration have only been tested offline and still need a live game run. See [how it works](docs/how-it-works.md).
+Commands go through the same command queue the game's UI uses, so the game applies its own costs and rules. The game
+stays paused between calls; time moves only when you call `advance`. Details: [how it works](docs/how-it-works.md).
+The bridge and Docker setup have been tested offline; a live run against the game is still pending.
 
 ## Get started
 
 1. Supply your own supported game files and [set up the bridge](docs/quickstart.md#run-the-bridge).
-2. From a checkout, [install the client](docs/quickstart.md#install-the-client) with `python -m pip install .`.
+2. [Install the client](docs/quickstart.md#install-the-client): `pip install --pre crusader-sdk` (pre-release for now).
 3. Connect to the running bridge and [try the client](docs/quickstart.md#install-the-client).
 
 See the [quickstart](docs/quickstart.md) for bridge setup, requirements, and the experimental Docker option.

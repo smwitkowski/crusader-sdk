@@ -1,0 +1,36 @@
+name: Bug report
+description: Something in the SDK, bridge or Docker setup doesn't work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please don't post game files, save files or access tokens. Security problems go through
+        [private vulnerability reporting](../security/advisories/new), not issues.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The command or code you ran, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error or bridge output
+      description: The CrusaderError message, bridge log lines, or a stack trace.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: crusader-sdk version
+      placeholder: "0.1.0a1"
+    validations:
+      required: true
+  - type: dropdown
+    id: setup
+    attributes:
+      label: How you run the bridge
+      options: [Docker image from this repo, Own Wine setup, Other]
+    validations:
+      required: true
