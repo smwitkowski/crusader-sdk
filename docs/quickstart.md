@@ -5,7 +5,7 @@
 The client requires Python 3.10 or later. From a checkout:
 
 ```sh
-python -m pip install --pre crusader-sdk   # or, from a checkout: python -m pip install .
+python -m pip install crusader-sdk   # or, from a checkout: python -m pip install .
 ```
 
 The client needs a running bridge and does not start the game itself. Against a bridge on the default local address:
@@ -26,7 +26,7 @@ except CrusaderError as exc:
 
 ## Run the bridge
 
-For a bridge installation, install the optional dependencies with `python -m pip install --pre 'crusader-sdk[bridge]'` (or `'.[bridge]'` from a checkout), then run `crusader-bridge --help` for match and process options. The real backend requires the supported game, Wine/Linux process access, and the included UCP3 module. The `--backend module:callable` option is a development hook for selecting an explicit backend factory. Alternatively, the following experimental Docker setup packages the runtime.
+For a bridge installation, install the optional dependencies with `python -m pip install 'crusader-sdk[bridge]'` (or `'.[bridge]'` from a checkout), then run `crusader-bridge --help` for match and process options. The real backend requires the supported game, Wine/Linux process access, and the included UCP3 module. The `--backend module:callable` option is a development hook for selecting an explicit backend factory. Alternatively, the following experimental Docker setup packages the runtime.
 
 ## Run with Docker
 

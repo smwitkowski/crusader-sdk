@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 from .types import AdvanceResult, BuildingInfo, CommandResult, Event, ReportResult, Site, State
 
-__version__ = "0.1.0a1"
+__version__ = "0.1.0"
 __all__ = ["CrusaderError", "Game"]
 
 

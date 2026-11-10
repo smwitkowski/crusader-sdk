@@ -6,6 +6,8 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-10
+
 ### Fixed
 - The memory boundary refused the UCP3 module's mailbox, which Wine maps as anonymous `rwxp` memory, so the bridge
   could not start against the real game. Anonymous executable private memory is now accepted; file-backed
@@ -35,5 +37,6 @@ First public pre-release.
 ### Known limitations
 - Tested offline only; the first live run against the game is pending.
 
-[Unreleased]: https://github.com/smwitkowski/crusader-sdk/compare/v0.1.0a1...HEAD
+[Unreleased]: https://github.com/smwitkowski/crusader-sdk/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/smwitkowski/crusader-sdk/compare/v0.1.0a1...v0.1.0
 [0.1.0a1]: https://github.com/smwitkowski/crusader-sdk/releases/tag/v0.1.0a1

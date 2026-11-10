@@ -57,7 +57,7 @@ The Docker setup has been verified live: `tools/smoke.py` passes all 12 steps ag
 ## Get started
 
 1. Supply your own supported game files and [set up the bridge](docs/quickstart.md#run-the-bridge).
-2. [Install the client](docs/quickstart.md#install-the-client): `pip install --pre crusader-sdk` (pre-release for now).
+2. [Install the client](docs/quickstart.md#install-the-client): `pip install crusader-sdk`.
 3. Connect to the running bridge and [try the client](docs/quickstart.md#install-the-client).
 
 See the [quickstart](docs/quickstart.md) for bridge setup, requirements, and the experimental Docker option.
