@@ -219,3 +219,15 @@ def test_required_game_port_functions_exist():
     missing = [spec["command"] for spec in COMMANDS.values() if not hasattr(game.Game, spec["command"])]
     assert not missing, f"Unimplemented commands: {missing}"
     assert all(hasattr(game, name) for name in ("footprint", "Terrain", "read_state", "place_reason"))
+
+
+def test_worker_line_absent_for_building_without_workers(memory):
+    driver = object.__new__(game.Game)
+    driver.pid = memory.pid
+    driver._game_text = lambda group, index: f"text {group}:{index}"
+    base = game.BUILDINGS_BASE - 0x14 + 7 * game.BUILDING_SIZE
+    memory.put(base + 0xE6, struct.pack("<h", 0x20))  # an ordinary building type
+    memory.put(base + 0x1AC, struct.pack("<h", 1))
+    assert driver._worker_line(7) is None  # +0x1AE and +0x1B0 both zero: no line, as in the game's widget
+    memory.put(base + 0x1AE, struct.pack("<h", 1))
+    assert driver._worker_line(7) == "text 18:9"  # one worker, building +0x2D0 zero: "no worker" text branch

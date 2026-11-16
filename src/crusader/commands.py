@@ -13,11 +13,15 @@ class _OptionalParameter(TypedDict, total=False):
 
 
 class Parameter(_OptionalParameter):
+    """One parameter of a command, with its wire type."""
+
     name: str
     type: str
 
 
 class Command(TypedDict):
+    """One entry of the command catalog: name, group, parameters, return type and summary."""
+
     command: str
     group: str
     params: list[Parameter]

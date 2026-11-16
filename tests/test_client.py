@@ -112,3 +112,14 @@ def test_configured_timeout_passed_to_transport(bridge):
     with patch("urllib.request.urlopen", wraps=original) as urlopen:
         assert Game.connect(url, timeout=2.5).state() is True
     assert urlopen.call_args.kwargs["timeout"] == 2.5
+
+
+def test_rejects_non_http_url():
+    import pytest
+
+    from crusader import Game
+
+    for url in ("file:///etc/passwd", "ftp://host", "127.0.0.1:8000"):
+        with pytest.raises(ValueError):
+            Game(url)
+    assert Game("HTTP://127.0.0.1:8000").url == "HTTP://127.0.0.1:8000"

@@ -22,11 +22,15 @@ class RawState(TypedDict):
 
 
 class Date(TypedDict):
+    """In-game calendar date."""
+
     month: int
     year: int
 
 
 class Building(TypedDict):
+    """One of your buildings in `state()['buildings']`."""
+
     id: int
     type: str
     x: int
@@ -34,6 +38,8 @@ class Building(TypedDict):
 
 
 class EnemyBuilding(Building):
+    """An enemy building in `state()['enemy']['buildings']`."""
+
     owner: int
     hp: int
     max_hp: int
@@ -45,6 +51,8 @@ class _UnitOptional(TypedDict, total=False):
 
 
 class Unit(_UnitOptional):
+    """A unit in `state()['units']`; `ammo` and `cows` appear only for units that carry them."""
+
     id: int
     type: str
     owner: int
@@ -61,25 +69,35 @@ class _LordOptional(TypedDict, total=False):
 
 
 class Lord(_LordOptional):
+    """A player's lord; `id`, position and `hp` may be absent."""
+
     owner: int
     alive: bool
 
 
 class Enemy(TypedDict):
+    """Enemy lords and buildings, when the game mode has an enemy."""
+
     lords: list[Lord]
     buildings: list[EnemyBuilding]
 
 
 class AllyRequest(TypedDict):
+    """A good and quantity an ally asked you for."""
+
     good: str
     qty: int
 
 
 class AllyAttack(TypedDict):
+    """An ally's attack order on a player."""
+
     attack: int
 
 
 class AllyPanel(TypedDict):
+    """One ally's request and current order, as the allies panel shows them."""
+
     player: int
     request: AllyRequest | None
     order: AllyAttack | str | None
@@ -90,6 +108,8 @@ class _AlliesOptional(TypedDict, total=False):
 
 
 class Allies(_AlliesOptional):
+    """Your allied players and their lords, plus the allies panel when present."""
+
     players: list[int]
     lords: list[Lord]
 
@@ -123,6 +143,8 @@ class State(_StateOptional):
 
 
 class Site(TypedDict):
+    """A valid top-left tile for a building, from `find_sites`."""
+
     x: int
     y: int
 
@@ -134,11 +156,15 @@ class _EventOptional(TypedDict, total=False):
 
 
 class Event(_EventOptional):
+    """One entry of the game event log, read with `events(since)`."""
+
     seq: int
     type: str
 
 
 class AdvanceResult(TypedDict):
+    """What `advance` returns after time moves."""
+
     tick: int
     ticks_left: int
     game_over: str | None

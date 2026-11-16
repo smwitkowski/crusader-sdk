@@ -7,6 +7,7 @@ import hmac
 import inspect
 import json
 import re
+import sys
 import threading
 from pathlib import Path
 from typing import Any, Protocol
@@ -459,6 +460,12 @@ def main() -> None:
         except ValueError:
             parser.error("--match must be castle_builder:seed, skirmish:map:ai:seed, or load:save")
         backend = Game(match, game_dir=args.game_dir, process_lookup=args.process_name)
+    if not args.token and args.host not in ("127.0.0.1", "localhost", "::1"):
+        print(
+            f"warning: bridge on {args.host} with no token; anything that can reach the port can drive the game "
+            "(set CRUSADER_TOKEN)",
+            file=sys.stderr,
+        )
     uvicorn.run(
         create_app(backend, token=args.token, log_path=args.log, allow_hosts=args.allow_host),
         host=args.host,
