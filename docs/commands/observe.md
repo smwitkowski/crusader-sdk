@@ -149,7 +149,7 @@ Return what the game's panel shows for one of the player's buildings. [API refer
 | `keep` | `peasants` (population) and `tax` (level −3 to 8). |
 | towers and gatehouses | `hp`, `max_hp`. |
 | `fletcher`, `poleturner`, `blacksmith` | `status`: the panel's status lines as text, when it shows any. |
-| any staffed building | `worker`: the panel's worker line in the game's own words (for example that there is no worker, that it sleeps, or what the worker is doing). Absent when the panel has none. |
+| any staffed building | `worker`: the panel's worker line in the game's own words (for example that there is no worker, that it sleeps, or what the worker is doing). Absent when the panel has none, which includes any building with no workers assigned, such as barracks and mercenary posts. |
 
 - **Refused when:** the ID is not an integer or not one of the player's buildings (`building N is not one of yours`).
 

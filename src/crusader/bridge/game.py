@@ -2023,6 +2023,10 @@ class Game:
         def h(off):
             return struct.unpack("<h", read_bytes(self.pid, base + off, 2))[0]
 
+        # The widget draws no line when the building has no workers and none assigned (+0x1AE and +0x1B0 both zero),
+        # which covers barracks, mercenary posts and any other workerless building.
+        if h(0x1AE) == 0 and h(0x1B0) == 0:
+            return None
         bt = h(0xE6)
         if 0x24 <= bt <= 0x26 or 0x28 <= bt <= 0x2C or h(0x1AC) <= 0:
             return None

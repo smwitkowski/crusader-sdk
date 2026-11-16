@@ -6,10 +6,22 @@ All notable changes to this project are listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+- `building_info` no longer reports a worker line for a building with no workers assigned (barracks, mercenary posts
+  and other workerless buildings), matching the game's own worker widget, which draws nothing when the building's
+  worker count and assignment are both zero. Not yet checked against the live game.
+
+### Security
+- `Game` refuses bridge URLs that are not `http://` or `https://` (raises `ValueError`).
+- `crusader-bridge` warns when it binds beyond loopback without a token.
+- Security review recorded in `SECURITY.md`: dependency audit, full-history secret scan, bandit, semgrep and a manual
+  review of the bridge server.
+
 ### Changed
 - Reference docs are complete: every building (footprint, cost, placement, purpose, staffing), unit, siege engine,
   good, event field and state field is documented, each command page lists its needs, costs, timing and refusals,
   and `docs/concepts.md` gains a game mechanics primer. Parameter constraints in the command catalog are filled in.
+- Every public result type has a docstring.
 - Docs and README no longer say `advance` returns events; read them with `events`.
 
 ## [0.1.0] - 2026-11-10

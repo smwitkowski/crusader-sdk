@@ -21,7 +21,18 @@ class Game:
     """Send commands to a Crusader bridge."""
 
     def __init__(self, url: str, timeout: float = 600, token: str | None = None) -> None:
-        """Set the bridge URL, request timeout, and optional bearer token."""
+        """Set the bridge URL, request timeout, and optional bearer token.
+
+        Args:
+            url: Bridge base URL; only `http://` and `https://` are accepted.
+            timeout: Seconds to wait for each command.
+            token: Bearer token; defaults to `CRUSADER_TOKEN`.
+
+        Raises:
+            ValueError: The URL scheme is not http or https.
+        """
+        if not url.lower().startswith(("http://", "https://")):
+            raise ValueError(f"bridge URL must start with http:// or https://, got {url!r}")
         self.url = url.rstrip("/")
         self.timeout = timeout
         self.token = token if token is not None else os.environ.get("CRUSADER_TOKEN")
@@ -42,7 +53,7 @@ class Game:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as response:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:  # nosec B310: scheme checked in __init__
                 out = json.load(response)
         except urllib.error.HTTPError as exc:
             try:
